@@ -1,0 +1,41 @@
+#!/bin/sh
+
+start() {
+  insmod /lib/modules/6.6.32/updates/hello.ko
+  insmod /lib/modules/6.6.32/updates/scull.ko 
+  insmod /lib/modules/6.6.32/updates/faulty.ko 
+  helloMajor=$(awk "\$2==\"hello\" {print \$1}" /proc/devices)
+  scullMajor=$(awk "\$2==\"scull\" {print \$1}" /proc/devices)
+  faultyMajor=$(awk "\$2==\"faulty\" {print \$1}" /proc/devices)
+
+  mknod /dev/faulty c $faultyMajor 0
+  chmod 664 /dev/faulty
+  mknod /dev/scull c $scullMajor 0
+  chmod 664 /dev/scull
+}
+
+stop() {
+  rmmod /lib/modules/6.6.32/updates/hello.ko
+  rmmod /lib/modules/6.6.32/updates/scull.ko 
+  rmmod /lib/modules/6.6.32/updates/faulty.ko
+
+  rm /dev/faulty
+  rm /dev/scull
+}
+
+case "$1" in
+    start)
+       start
+       ;;
+    stop)
+       stop
+       ;;
+    restart)
+       stop
+       start
+       ;;
+    *)
+       echo "Usage: $0 {start|stop|restart}"
+esac
+
+exit 0
